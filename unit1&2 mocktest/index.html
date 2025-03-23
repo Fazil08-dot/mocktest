@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Mock Test</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #2ecc71;
+            --background-color: #ecf0f1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 95%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .header {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            padding: 2rem;
+            color: white;
+            text-align: center;
+        }
+
+        .timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50px;
+            font-size: 1.2em;
+        }
+
+        .question-container {
+            padding: 2rem;
+        }
+
+        .question {
+            font-size: 1.2em;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-left: 4px solid var(--secondary-color);
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 0 10px 10px 0;
+        }
+
+        .options {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .option {
+            padding: 1rem 1.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option:hover {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: var(--secondary-color);
+            transform: translateX(10px);
+        }
+
+        .option.correct {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .option.incorrect {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Enhanced Fireworks Animation */
+        .fireworks-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .firework {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: fireworkBurst 2s ease-out forwards;
+        }
+
+        @keyframes fireworkBurst {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: particleSpread 1.5s ease-out forwards;
+        }
+
+        @keyframes particleSpread {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(0.5);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Physics Mock Test</h1>
+            <div class="timer">
+                <i class="fas fa-clock"></i>
+                Time Remaining: <span id="time">120:00</span>
+            </div>
+        </div>
+        <div class="question-container">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <button class="button" id="next" style="display: none;">
+                <i class="fas fa-arrow-right"></i>
+                Next Question
+            </button>
+        </div>
+    </div>
+    <div class="fireworks-container" id="fireworks"></div>
+
+    <script>
+        const questions = [
+            { question: "A circle moves such that it always touches the circles x²+y²=4 and x²+y²−8x−6y+24=0 externally. The locus of its center is:", options: ["3x+4y=25", "3x+4y=10", "4x+3y=25", "4x+3y=10"], answer: "4x+3y=25" },
+            { question: "A variable circle passes through (1,0) and touches the circle x²+y²=9. The locus of its center is:", options: ["x²+y²−2x−8=0", "x²+y²−2x−5=0", "x²+y²−2x−3=0", "x²+y²−2x−1=0"], answer: "x²+y²−2x−8=0" },
+            { question: "Two circles with radii r₁ and r₂ intersect at (1,2) and (3,4). The locus of the center of a circle orthogonal to both is:", options: ["Radical axis of the two circles", "Line perpendicular to the line joining their centers", "Radical axis shifted by r₁²−r₂²", "Circle centered at (2,3)"], answer: "Radical axis of the two circles" },
+            { question: "The radical axis of x²+y²+2gx+c=0 and x²+y²+2fy+c=0 is:", options: ["gx−fy=0", "gx+fy=0", "fx−gy=0", "fx+gy=0"], answer: "gx+fy=0" },
+            { question: "If the radical axis of x²+y²−2x−4y+1=0 and x²+y²−4x−6y+λ=0 is 2x+2y=5, then λ is:", options: ["8", "10", "12", "14"], answer: "10" },
+            { question: "The radical center of the circles x²+y²+4x+6y=0, x²+y²−2x=1, and x²+y²−4y=5 is:", options: ["(1,−1)", "(−1,1)", "(2,−2)", "(−2,2)"], answer: "(1,−1)" },
+            { question: "Two circles x²+y²+2gx+2fy+c=0 and x²+y²+2g′x+2f′y+c′=0 intersect orthogonally. If g+g′=f+f′, then c+c′:", options: ["2(g²+f²)", "g²+f²", "0", "2(gf)"], answer: "2(g²+f²)" },
+            { question: "The circle x²+y²−4x−6y+9=0 is orthogonal to another circle passing through (1,2). If the second circle has radius 5√, its equation is:", options: ["x²+y²−2x−4y=0", "x²+y²−6x−8y=0", "x²+y²−8x−10y=0", "x²+y²−10x−12y=0"], answer: "x²+y²−2x−4y=0" },
+            { question: "If the circles x²+y²+2ax+c=0 and x²+y²+2by+c=0 are orthogonal, then 1/a² + 1/b²:", options: ["1/c", "1/c²", "2/c", "2/c²"], answer: "1/c²" },
+            { question: "The equation of the circle passing through the intersection of x²+y²−4=0 and x²+y²−2x−4y+4=0, and with center on x+y=3, is:", options: ["x²+y²−3x−3y+4=0", "x²+y²−4x−2y+4=0", "x²+y²−5x−y+4=0", "x²+y²−6x+4=0"], answer: "x²+y²−3x−3y+4=0" },
+            { question: "The family of circles x²+y²−2x+4y+λ(x−y)=0 has a common radical axis. Its equation is:", options: ["x−y=0", "x+y=0", "x−y+1=0", "x+y+1=0"], answer: "x−y+1=0" },
+            { question: "A circle passes through (1,2) and belongs to the coaxial system defined by x²+y²−4x−6y+9=0 and x²+y²−2x−4y+4=0. Its equation is:", options: ["x²+y²−3x−5y+6=0", "x²+y²−5x−7y+12=0", "x²+y²−6x−8y+15=0", "x²+y²−4x−6y+8=0"], answer: "x²+y²−3x−5y+6=0" },
+            { question: "The locus of the midpoint of chords of the circle x²+y²=25 that subtend a right angle at (3,4) is:", options: ["x²+y²−3x−4y=0", "x²+y²−6x−8y=0", "x²+y²−3x−4y+25=0", "x²+y²−6x−8y+25=0"], answer: "x²+y²−3x−4y=0" },
+            { question: "If the circles x²+y²+2aᵢx+b=0 (i=1,2,3) are coaxial, then a₁,a₂,a₃ satisfy:", options: ["a₁+a₂+a₃=0", "1/a₁+1/a₂+1/a₃=0", "a₁a₂+a₂a₃+a₃a₁=0", "a₁²+a₂²+a₃²=0"], answer: "a₁a₂+a₂a₃+a₃a₁=0" },
+            { question: "The equation of the circle cutting the three circles x²+y²=1, x²+y²−2x=0, and x²+y²−2y=0 orthogonally is:", options: ["x²+y²−x−y=0", "x²+y²−2x−2y=0", "x²+y²−x−y−1=0", "x²+y²−2x−2y−1=0"], answer: "x²+y²−2x−2y=0" },
+            { question: "A circle orthogonal to x²+y²=25 and x²+y²−4x−6y+9=0 has its center on x+y=7. Its radius is:", options: ["5√", "10√", "15√", "20√"], answer: "10√" },
+            { question: "The locus of centers of circles bisecting the circumference of x²+y²=9 and touching x²+y²−4x−6y+12=0 is:", options: ["A parabola", "A circle", "A straight line", "An ellipse"], answer: "A straight line" },
+            { question: "If the radical axis of x²+y²=a² and x²+y²−2ax−2ay+a²=0 is tangent to the circle x²+y²=b², then a and b satisfy:", options: ["a=2b", "2a=b", "a=√2b", "b=√2a"], answer: "a=√2b" },
+            { question: "The equation of the circle passing through (1,1) and the points of intersection of x²+y²=5 and x²+y²−3x+4y=6 is:", options: ["x²+y²−2x−3y=0", "x²+y²−x−y=0", "x²+y²−3x−2y=0", "x²+y²−2x−y=0"], answer: "x²+y²−2x−3y=0" },
+            { question: "The radical axis of two circles is 3x+4y=10. If one circle is x²+y²=16, the other circle’s equation could be:", options: ["x²+y²−6x−8y+24=0", "x²+y²−3x−4y+10=0", "x²+y²−6x−8y=0", "x²+y²−3x−4y=0"], answer: "x²+y²−6x−8y+24=0" },
+            { question: "Three circles with equations x²+y²+4x−6y=0, x²+y²−2x=0, and x²+y²−6y+8=0 are coaxial. The radical center is:", options: ["(1,2)", "(2,1)", "(1,−2)", "(−1,2)"], answer: "(1,2)" },
+            { question: "The locus of the center of a circle cutting x²+y²=4 and x²+y²−6x−8y+24=0 orthogonally is:", options: ["3x+4y=13", "3x+4y=10", "4x+3y=13", "4x+3y=10"], answer: "3x+4y=13" },
+            { question: "A circle orthogonal to x²+y²=9 and x²+y²−4x−5=0 has its center on y=x. Its radius is:", options: ["√2", "2√2", "3√2", "4√2"], answer: "√2" },
+            { question: "The power of the point (2,3) with respect to the circle x²+y²−4x−6y+12=0 is:", options: ["1", "3", "5", "7"], answer: "1" },
+            { question: "The chord of contact from (5,5) to the circle x²+y²=25 has length:", options: ["10", "10√2", "5√2", "5"], answer: "5√2" },
+            { question: "The circles x²+y²=16 and x²+y²−8x−6y+24=0 are:", options: ["Touching externally", "Touching internally", "Intersecting at two points", "Concentric"], answer: "Touching internally" },
+            { question: "The radical axis of x²+y²−2x=0 and x²+y²−4y=0 is:", options: ["x−2y=0", "2x−y=0", "x+2y=0", "2x+y=0"], answer: "2x−y=0" },
+            { question: "If the circles x²+y²+2ax+c=0 and x²+y²+2by+c=0 are orthogonal, then 1/a² + 1/b² =:", options: ["1/c", "1/c²", "2/c", "2/c²"], answer: "1/c²" },
+            { question: "The equation of the circle passing through (1,1) and the intersections of x²+y²=5 and x²+y²−3x+4y=6 is:", options: ["x²+y²−2x−3y=0", "x²+y²+2x−3y=0", "x²+y²−3x−2y=0", "x²+y²+3x−2y=0"], answer: "x²+y²−2x−3y=0" },
+            { question: "The locus of midpoints of chords of x²+y²=25 that pass through (3,4) is:", options: ["3x+4y=25", "3x+4y=0", "x²+y²−3x−4y=0", "x²+y²+3x+4y=0"], answer: "x²+y²−3x−4y=0" },
+            { question: "The equation of a circle coaxial with x²+y²−4x=0 and x²+y²−6y=0 and passing through (1,1) is:", options: ["x²+y²−2x−3y=0", "x²+y²−4x−2y=0", "x²+y²−6x−4y=0", "x²+y²−8x−6y=0"], answer: "x²+y²−2x−3y=0" },
+            { question: "The circle orthogonal to x²+y²=9 and x²+y²−4x−5=0 with center on y=x has radius:", options: ["√2", "√3", "√5", "√7"], answer: "√2" },
+            { question: "The radical center of x²+y²−2x=0, x²+y²+4y=0, and x²+y²−6x−8y=0 is:", options: ["(1,−1)", "(−1,1)", "(2,−2)", "(−2,2)"], answer: "(1,−1)" },
+            { question: "The parametric equations x=2+3cosθ, y=−1+3sinθ represent a circle with center:", options: ["(2,−1)", "(−2,1)", "(3,−3)", "(−3,3)"], answer: "(2,−1)" },
+            { question: "The tangent to x²+y²=25 at (3,4) has equation:", options: ["3x+4y=25", "4x−3y=25", "3x−4y=25", "4x+3y=25"], answer: "3x+4y=25" },
+            { question: "The number of common tangents to x²+y²=9 and x²+y²−12x−16y+75=0:", options: ["1", "2", "3", "4"], answer: "1" },
+            { question: "The power of (1,2) w.r.t. x²+y²−4x−6y+9=0:", options: ["1", "2", "3", "4"], answer: "2" },
+            { question: "The length of the chord x+y=2 in x²+y²=4:", options: ["2√2", "4", "2√3", "√2"], answer: "2√2" },
+            { question: "The director circle of x²+y²=16 is:", options: ["x²+y²=32", "x²+y²=16", "x²+y²=8", "x²+y²=4"], answer: "x²+y²=32" },
+            { question: "The inverse of the circle x²+y²−4x=0 w.r.t. x²+y²=16 is:", options: ["A line", "A circle", "A parabola", "An ellipse"], answer: "A circle" },
+            { question: "Rotating the circle x²+y²−6x=0 by 90° about the origin results in a circle with center:", options: ["(0,6)", "(6,0)", "(0,−6)", "(−6,0)"], answer: "(0,6)" },
+            { question: "The director circle of x²+y²+4x+6y+9=0 has the equation:", options: ["x²+y²+4x+6y−9=0", "x²+y²+4x+6y+18=0", "x²+y²+4x+6y−18=0", "x²+y²+4x+6y+9=0"], answer: "x²+y²+4x+6y+18=0" },
+            { question: "The inverse of the circle x²+y²−6x=0 with respect to the circle x²+y²=9 is:", options: ["A line parallel to the x-axis", "A circle passing through the origin", "A parabola", "A hyperbola"], answer: "A circle passing through the origin" },
+            { question: "The limiting points of the coaxial system defined by x²+y²−4x+6y+9=0 and x²+y²−2x+4y+4=0 are:", options: ["(1,−1) and (3,−5)", "(0,0) and (2,−3)", "(1,−2) and (−1,2)", "No real limiting points"], answer: "No real limiting points" },
+            { question: "Three circles S₁: x²+y²−2x=0, S₂: x²+y²+4y=0, and S₃: x²+y²−6x−8y=0 have a radical center at:", options: ["(1,−1)", "(2,−2)", "(−1,1)", "(−2,2)"], answer: "(1,−1)" },
+            { question: "The equation of a circle coaxial with x²+y²−6x=0 and x²+y²−8y=0 and passing through (2,3) is:", options: ["x²+y²−3x−4y=0", "x²+y²−4x−6y=0", "x²+y²−6x−8y=0", "x²+y²−12x−16y=0"], answer: "x²+y²−3x−4y=0" },
+            { question: "A circle touches the line 3x+4y=12 and has its center on the parabola y²=4x. Its radius is:", options: ["1", "2", "3", "4"], answer: "2" },
+            { question: "The locus of midpoints of chords of x²+y²=16 that are tangent to x²+y²−4x−4y+4=0 is:", options: ["x²+y²−2x−2y=0", "x²+y²−4x−4y=0", "x²+y²−8x−8y=0", "x²+y²−16=0"], answer: "x²+y²−2x−2y=0" },
+            { question: "If a circle passes through the orthocenter of a triangle with vertices at (0,0), (4,0), and (0,3), the locus of its center is:", options: ["6x−8y=25", "8x+6y=25", "6x+8y=25", "8x−6y=25"], answer: "6x+8y=25" },
+            { question: "Two circles x²+y²+2gx+2fy+c=0 and x²+y²+2g′x+2f′y+c′=0 intersect orthogonally. If g+g′=f+f′, then c+c′ =:", options: ["g²+f²", "2(g²+f²)", "g²−f²", "2(g²−f²)"], answer: "2(g²+f²)" },
+            { question: "The radical axis of x²+y²=9 and x²+y²−6x−8y+24=0 is tangent to the circle x²+y²=k. The value of k is:", options: ["1", "2", "3", "4"], answer: "1" },
+            { question: "A tangent to the circle x=2+3cosθ, y=−1+3sinθ at θ=π/4 has the equation:", options: ["x+y=1+3√2", "x−y=3+3√2", "x+y=3−3√2", "x−y=1−3√2"], answer: "x−y=3+3√2" },
+            { question: "The line 2x+y=5 bisects all chords of the circle x²+y²−4x−6y+9=0 that are parallel to:", options: ["x+2y=0", "2x−y=0", "x−2y=0", "2x+y=0"], answer: "x−2y=0" },
+            { question: "The number of common tangents to x²+y²=16 and x²+y²−24x−18y+225=0:", options: ["1", "2", "3", "4"], answer: "1" },
+            { question: "Three circles x²+y²−4x=0, x²+y²−6y=0, and x²+y²−12x−12y+36=0 intersect at:", options: ["Two distinct points", "One common point", "Three collinear points", "No common points"], answer: "One common point" },
+            { question: "A circle passes through the focus of the parabola y²=4x and touches its vertex. The circle’s equation is:", options: ["x²+y²−2x=0", "x²+y²−4x=0", "x²+y²−6x=0", "x²+y²−8x=0"], answer: "x²+y²−2x=0" },
+            { question: "The radical axes of three circles form a triangle. The circles are:", options: ["Concentric", "Coaxial", "Mutually tangent", "Orthogonal"], answer: "Coaxial" },
+            { question: "If two orthogonal circles have radii r₁ and r₂, the radius of the circle orthogonal to both is:", options: ["√(r₁²+r₂²)", "√(r₁²−r₂²)", "√(r₁r₂)", "r₁r₂/√(r₁²+r₂²)"], answer: "√(r₁r₂)" },
+            { question: "Two circles x²+y²=16 and x²+y²−8x+6y+24=0 intersect at an angle θ. Then cosθ =:", options: ["1/√2", "3/5", "4/5", "7/10"], answer: "3/5" },
+            { question: "The circle r=4cosθ in polar coordinates has a Cartesian equation:", options: ["x²+y²=4x", "x²+y²=4y", "x²+y²=16", "x²+y²=8x"], answer: "x²+y²=4x" },
+            { question: "Reflecting the circle x²+y²−6x−8y+24=0 over the line x+y=5 results in a circle with center:", options: ["(3,4)", "(4,3)", "(5,5)", "(6,2)"], answer: "(4,3)" }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let skippedQuestions = 0;
+        let timer;
+        let timeLeft = 7200; // 120 minutes = 7200 seconds
+
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const nextButton = document.getElementById('next');
+        const timeEl = document.getElementById('time');
+        const fireworksEl = document.getElementById('fireworks');
+
+        function startTimer() {
+            updateTimerDisplay();
+            timer = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endTest();
+                } else {
+                    timeLeft--;
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timeEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            questionEl.textContent = `Question ${currentQuestion + 1}: ${question.question}`;
+            optionsEl.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const button = document.createElement('div');
+                button.className = 'option';
+                button.textContent = `${String.fromCharCode(65 + index)}) ${option}`;
+                button.addEventListener('click', () => selectOption(index, question.answer));
+                optionsEl.appendChild(button);
+            });
+            nextButton.style.display = 'none';
+        }
+
+        function selectOption(index, correctAnswer) {
+            const selectedOption = document.querySelectorAll('.option')[index];
+            if (selectedOption.textContent.includes(correctAnswer)) {
+                score += 2;
+                correctAnswers++;
+                selectedOption.classList.add('correct');
+            } else {
+                wrongAnswers++;
+                selectedOption.classList.add('incorrect');
+            }
+            nextButton.style.display = 'inline-block';
+        }
+
+        nextButton.addEventListener('click', () => {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                endTest();
+            }
+        });
+
+        function createFireworks() {
+            const colors = ['#ffeb3b', '#ff5722', '#4caf50', '#2196f3', '#e91e63'];
+            for (let i = 0; i < 10; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.background = colors[Math.floor(Math.random() * colors.length)];
+                firework.style.top = `${Math.random() * 80 + 10}%`;
+                firework.style.left = `${Math.random() * 80 + 10}%`;
+                fireworksEl.appendChild(firework);
+
+                for (let j = 0; j < 12; j++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.background = firework.style.background;
+                    const angle = (j / 12) * 2 * Math.PI;
+                    const distance = Math.random() * 50 + 20;
+                    particle.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+                    particle.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+                    particle.style.top = '50%';
+                    particle.style.left = '50%';
+                    firework.appendChild(particle);
+                }
+            }
+        }
+
+        function endTest() {
+            clearInterval(timer);
+            skippedQuestions = questions.length - (correctAnswers + wrongAnswers);
+            questionEl.textContent = "Test Completed!";
+            optionsEl.innerHTML = '';
+            nextButton.style.display = 'none';
+            fireworksEl.innerHTML = ''; // Clear previous fireworks
+            fireworksEl.style.display = 'block';
+            createFireworks();
+            setTimeout(() => {
+                fireworksEl.style.display = 'none';
+                displayResult();
+            }, 4000);
+        }
+
+        function displayResult() {
+            const resultMessage = `Test completed!\nTotal Score: ${score}/120\nCorrect Answers: ${correctAnswers}\nWrong Answers: ${wrongAnswers}\nSkipped Questions: ${skippedQuestions}`;
+            alert(resultMessage);
+        }
+
+        startTimer();
+        showQuestion();
+    </script>
+</body>
+</html>
